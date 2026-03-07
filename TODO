@@ -1,0 +1,34 @@
+aegis-crypt : AegisCrypt (ace-crypter) ?? agcrypter
+
+acecurity (Ass/Ace) Ace-Security
+
+Sentrifuge
+
+Add configurable key derivation algo to key.new(...)
+
+=>
+Shouldn't we implement AEAD classes and HPKE primitives over the implemented primitives from the chosen backends?
+
+
+Yes, that’s the right direction.
+
+You should implement AEAD/HPKE as backend-agnostic API layers, then let each backend provide capability hooks. Two good patterns:
+
+Direct backend primitives when available (cryptography AEAD/HPKE classes).
+Composed fallback over existing primitives only where secure and well-defined.
+Why this is better:
+
+AEAD/HPKE are protocol-level APIs, not just “another cipher mode”.
+You need explicit nonce/AAD/context semantics and misuse checks in one place.
+Backends differ in what they natively support, so capability negotiation is needed.
+Key caveat:
+
+Don’t “fake” AEAD by ad-hoc composition unless done with vetted constructions.
+HPKE is especially sensitive; prefer native implementation first.
+So: conceptually yes, but it requires adding first-class API surfaces (new enums/types/interfaces and set_backend wiring for those surfaces), not just plugging into current Sym.Operation/Asym slots
+=>
+
+Add RFC 3394 / RFC 5649 style wrap/unwrap functions as primitives.
+Add HOTP/TOTP as primitives?
+Add Finite-field DH as primitives? => DHParameter, DHPrivateKey
+Implement show_implemented_primitives() -> list[str]? that way it's clear what you can use.
