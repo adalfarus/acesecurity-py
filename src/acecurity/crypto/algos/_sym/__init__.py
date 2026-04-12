@@ -23,6 +23,7 @@ class Operation(enum.Enum):
 class Padding(enum.Enum):
     """Padding Schemes"""
 
+    NONE = (None, "")
     PKCS7 = (None, "")
     ANSIX923 = (None, "")
 

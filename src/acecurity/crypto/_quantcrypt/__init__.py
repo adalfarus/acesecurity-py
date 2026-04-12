@@ -3,7 +3,7 @@ from quantcrypt.dss import MLDSA_44, MLDSA_65, MLDSA_87
 from quantcrypt import errors
 
 
-from .._definitions import _KYBER_KEYPAIRTYPE, _DILITHIUM_KEYPAIRTYPE, SymKeyEncoding
+from .._definitions import _KYBER_KEYPAIRTYPE, _DILITHIUM_KEYPAIRTYPE#, SymKeyEncoding
 from ..exceptions import NotSupportedError as _NotSupportedError
 from ..algos._asym import (
     KeyFormat as ASymKeyFormat,
@@ -98,6 +98,9 @@ class _DILITHIUM_KEYPAIR(_DILITHIUM_KEYPAIRTYPE):
         private_key: bytes | None = None,
     ) -> _te.Self:
         """, encoding: SymKeyEncoding"""
+        if public_key is None or private_key is None:
+            raise ValueError("Please pass both public and private key for now as this backend does not support public "
+                             "key regeneration as of now.")
         obj = cls(mode)
         obj._public_key = public_key
         obj._private_key = private_key

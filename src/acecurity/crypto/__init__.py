@@ -3,6 +3,7 @@
 from importlib import import_module as _import_module
 import warnings as _warnings
 import os as _os
+import base64
 
 # from .algos import (Sym as _Sym, ASym as _ASym, HashAlgorithm as _HashAlgorithm,
 #                     KeyDerivationFunction as _KDF)
@@ -11,7 +12,19 @@ from ._definitions import (
     _HASHER_WITH_LEN_BACKEND,
     _HASHID_TO_STRING,
     Backend,
+    _BASIC_KEY_DERIVATION_FUNC,
+    Scrypt,
+    ARGON2,
+    _BaseSymmetricKey,
+    AES,
+    _ECC_KEYPAIRTYPE,
+    ECC,
+    _DILITHIUM_KEYPAIRTYPE,
+    DILITHIUM
 )
+from .algos._sym import (KeyEncoding as SymKeyEncoding, Padding as SymPadding,
+                         Operation as SymOperation, MessageAuthenticationCode)
+from .algos._asym import (KeyFormat as ASymKeyFormat, KeyEncoding as ASymKeyEncoding, Padding as ASymPadding, )
 from .. import Security as _Security, RiskLevel as _RiskLevel
 from .exceptions import NotSupportedError as _NotSupportedError
 
@@ -187,13 +200,13 @@ def set_backend(backends: list[Backend] | None = None) -> None:
             raise _NotSupportedError(
                 f"Backend '{repr(backend)}' is not supported by aplustools.crypt"
             )
-        try:
-            backend_modules.append(_import_module(backend.value[0]))
-        except ImportError:
-            raise _NotSupportedError(
-                f"The {backend.value[1]} is not yet supported by acecurity.crypt or you forgot to install the "
-                f"needed dependencies."
-            )
+        #try:
+        backend_modules.append(_import_module(backend.value[0]))
+        # except ImportError:
+        #     raise _NotSupportedError(
+        #         f"The {backend.value[1]} is not yet supported by acecurity.crypt or you forgot to install the "
+        #         f"needed dependencies."
+        #     )
 
     BACKENDS = backends
     with suppress_warnings():
@@ -295,7 +308,6 @@ def set_backend(backends: list[Backend] | None = None) -> None:
             key = f"_{sym_to_set()}_KEY"
             found_sym_key: bool = False
             for module in backend_modules:
-                print(module, key, hasattr(module, key))
                 if hasattr(module, key):
                     sym_to_set.key = getattr(module, key)
                     sym_to_set.key.__concrete__ = True
@@ -325,6 +337,175 @@ def set_backend(backends: list[Backend] | None = None) -> None:
                 asym_to_set.keypair = _ty.get_type_hints(asym_to_set)[
                     "keypair"
                 ].__args__[0]
+
+
+@_te.deprecated("Scrypt is not considered post-quantum secure. Please use PQPasswordManager (Argon2ID) from now on!")
+class PasswordManager:
+    """
+    Uses Scrypt as it's hashing function due to its stronger resistance to GPU and ASIC attacks and to better protect
+    against evolving attack vectors.
+    """
+    _PARAMS: tuple[tuple[int, int, int, int], ...] = (
+        (16, 2**14, 8, 1),
+        (32, 2**15, 8, 1),
+        (64, 2**16, 8, 1),
+        (128, 2**17, 8, 2)
+    )
+
+    @classmethod
+    @_te.deprecated("Scrypt is not considered post-quantum secure. Please use PasswordManager (Argon2ID) from now on!")
+    def hash_password(cls, password: str, length: int = 64, strength: int = _Security.STRONG) -> bytes:
+        warnings.warn("Scrypt is not considered post-quantum secure. Please use PQPasswordManager (Argon2ID) from now on!", stacklevel=2)
+        salt_length: int
+        n: int
+        r: int
+        p: int
+        salt_length, n, r, p = cls._PARAMS[strength.value]
+        salt: bytes = _os.urandom(salt_length)
+        res: bytes = Scrypt.derive(password.encode(), salt=salt, length=length, n=n, r=r, p=p)
+        return b"scrypt$%i$%i$%i$%b$%b" % (n, r, p, base64.b64encode(salt), res)
+
+    @staticmethod
+    @_te.deprecated("Scrypt is not considered post-quantum secure. Please use PasswordManager (Argon2ID) from now on!")
+    def verify_password(password: str, hashed_password: bytes) -> bool:
+        warnings.warn("Scrypt is not considered post-quantum secure. Please use PQPasswordManager (Argon2ID) from now on!", stacklevel=2)
+        if not hashed_password.startswith(b"scrypt"):
+            raise ValueError("Password was not hashed with PasswordManager[Scrypt]!")
+        _, encoded_n, encoded_r, encoded_p, b64salt, hashed_password = hashed_password.split(b"$", maxsplit=5)
+        n: int = int(encoded_n.decode())
+        r: int = int(encoded_r.decode())
+        p: int = int(encoded_p.decode())
+        derived_key = Scrypt.derive(password.encode(), salt=base64.b64decode(b64salt), length=len(hashed_password), n=n, r=r, p=p)
+        return derived_key == hashed_password
+
+
+class PQPasswordManager:
+    """
+    Post Quantum PM; Uses Argon2ID as it's hashing function.
+    """
+    _PARAMS: tuple[tuple[int, int, int, int], ...] = (
+        (16, 2, 19 * 1024, 1),  # BASIC  (OWASP minimum-ish)
+        (16, 3, 32 * 1024, 2),  # AVERAGE
+        (16, 3, 64 * 1024, 4),  # STRONG  (great default)
+        (16, 4, 128 * 1024, 4),  # SUPER_STRONG
+    )
+
+    @classmethod
+    def hash_password(cls, password: str, length: int = 64, strength: int = _Security.STRONG) -> bytes:
+        salt_length: int
+        time_cost: int
+        memory_cost: int
+        parallelism: int
+        salt_length, time_cost, memory_cost, parallelism = cls._PARAMS[strength.value]
+        salt: bytes = _os.urandom(salt_length)
+        res: bytes = ARGON2.derive(password.encode(), salt=salt, length=length, time_cost=time_cost, memory_cost=memory_cost, parallelism=parallelism, variant="id")
+        return b"argon2id$%i$%i$%i$%b$%b" % (time_cost, memory_cost, parallelism, base64.b64encode(salt), res)
+
+    @staticmethod
+    def verify_password(password: str, hashed_password: bytes) -> bool:
+        if not hashed_password.startswith(b"argon2id"):
+            raise ValueError("Password was not hashed with PasswordManager[Scrypt]!")
+        _, encoded_time_cost, encoded_memory_cost, encoded_parallelism, b64salt, hashed_password = hashed_password.split(b"$", maxsplit=5)
+        time_cost: int = int(encoded_time_cost.decode())
+        memory_cost: int = int(encoded_memory_cost.decode())
+        parallelism: int = int(encoded_parallelism.decode())
+        derived_key = ARGON2.derive(password.encode(), salt=base64.b64decode(b64salt), length=len(hashed_password),
+                                    time_cost=time_cost, memory_cost=memory_cost, parallelism=parallelism, variant="id")
+        return derived_key == hashed_password
+
+
+class DataEncryptor:
+    """
+    Uses Symmetric Cypher (AES) encryption which is very secure if used with a sufficient key size like 256.
+    """
+    def __init__(self, key: _BaseSymmetricKey) -> None:
+        self._key: _BaseSymmetricKey = key
+
+    @classmethod
+    def generate(cls, key_size: _ty.Literal[128, 192, 256] = 256) -> _te.Self:
+        return cls(AES.key(key_size, None))
+
+    @classmethod
+    def from_key(cls, key: bytes, encoding: SymKeyEncoding = SymKeyEncoding.RAW) -> _te.Self:
+        return cls(AES.key.decode(key, encoding))
+
+    @classmethod
+    def from_password(cls, password: str, key_size: _ty.Literal[128, 192, 256] = 256) -> _te.Self:
+        return cls(AES.key(key_size, password))
+
+    def get_key(self, encoding: SymKeyEncoding = SymKeyEncoding.RAW) -> bytes:
+        return self._key.encode(encoding)
+
+    def encrypt_data(self, data: bytes, padding: SymPadding = SymPadding.NONE, mode: SymOperation = SymOperation.GCM) -> bytes:
+        return self._key.encrypt(data, padding, mode)
+
+    def decrypt_data(self, encrypted_data: bytes, padding: SymPadding = SymPadding.NONE, mode: SymOperation = SymOperation.GCM) -> bytes:
+        return self._key.decrypt(encrypted_data, padding, mode)
+
+
+# @_te.deprecated("ECDSA SECP256R1 is not considered post-quantum secure. Please use PQDigitalSigner (DILITHIUM) from now on!")
+class DigitalSigner:
+    """
+    Creates and manages ECDSA signatures using the SECP256R1 curve.
+
+    This is a widely used classical digital signature scheme, but it is not post-quantum secure.
+    """
+    def __init__(self, keypair: _ECC_KEYPAIRTYPE) -> None:
+        # warnings.warn("ECDSA SECP256R1 is not considered post-quantum secure. Please use PQDigitalSigner (DILITHIUM) from now on!", stacklevel=2)
+        self._key_pair: _ECC_KEYPAIRTYPE = keypair
+
+    @classmethod
+    # @_te.deprecated("ECDSA SECP256R1 is not considered post-quantum secure. Please use PQDigitalSigner (DILITHIUM) from now on!")
+    def generate(cls) -> _te.Self:
+        return cls(ECC.keypair(ECC.Type.ECDSA, ECC.Curve.SECP256R1, None))
+
+    @classmethod
+    # @_te.deprecated("ECDSA SECP256R1 is not considered post-quantum secure. Please use PQDigitalSigner (DILITHIUM) from now on!")
+    def from_private_key(cls, private_key_bytes: bytes, format_: ASymKeyFormat = ASymKeyFormat.PKCS8,
+                         encoding: ASymKeyEncoding = ASymKeyEncoding.PEM, password: bytes | None = None) -> _te.Self:
+        return cls(ECC.keypair.decode_private_key(private_key_bytes, format_, encoding, password))
+
+    # @_te.deprecated("ECDSA SECP256R1 is not considered post-quantum secure. Please use PQDigitalSigner (DILITHIUM) from now on!")
+    def get_private_key(self, format_: ASymKeyFormat = ASymKeyFormat.PKCS8,
+                        encoding: ASymKeyEncoding = ASymKeyEncoding.PEM, password: bytes | None = None) -> bytes:
+        return self._key_pair.encode_private_key(format_, encoding, password)
+
+    # @_te.deprecated("ECDSA SECP256R1 is not considered post-quantum secure. Please use PQDigitalSigner (DILITHIUM) from now on!")
+    def sign_data(self, data: bytes, padding: ASymPadding | None = ASymPadding.PSS) -> bytes:
+        return self._key_pair.sign(data, padding)
+
+    # @_te.deprecated("ECDSA SECP256R1 is not considered post-quantum secure. Please use PQDigitalSigner (DILITHIUM) from now on!")
+    def verify_signature(self, data: bytes, signature: bytes, padding: ASymPadding | None = ASymPadding.PSS) -> bool:
+        return self._key_pair.sign_verify(data, signature, padding)
+
+
+class PQDigitalSigner:
+    """
+    Creates and manages DILITHIUM signatures. This algorithm is quantum secure.
+    """
+    def __init__(self, keypair: _DILITHIUM_KEYPAIRTYPE) -> None:
+        warnings.warn(
+            "DILITHIUM is not yet well supported in Python, please only use it for testing purposes for now.",
+            stacklevel=2)
+        self._key_pair: _DILITHIUM_KEYPAIRTYPE = keypair
+
+    @classmethod
+    def generate(cls, mode: _ty.Literal["dilithium2", "dilithium3", "dilithium5"]) -> _te.Self:
+        return cls(DILITHIUM.keypair(mode))
+
+    @classmethod
+    def from_keypair(cls, mode: _ty.Literal["dilithium2", "dilithium3", "dilithium5"], private_key_bytes: bytes,
+                         public_key_bytes: bytes) -> _te.Self:
+        return cls(DILITHIUM.keypair.decode(mode, private_key=private_key_bytes, public_key=public_key_bytes))
+
+    def get_keypair(self) -> tuple[bytes, bytes]:
+        return self._key_pair.encode_private_key(), self._key_pair.encode_public_key()
+
+    def sign_data(self, data: bytes) -> bytes:
+        return self._key_pair.sign(data)
+
+    def verify_signature(self, data: bytes, signature: bytes) -> bool:
+        return self._key_pair.sign_verify(data, signature)
 
 
 # if 1!=1:
@@ -579,59 +760,3 @@ def set_backend(backends: list[Backend] | None = None) -> None:
 #             return self._real_backend[1].sign_verify(data, signature, cipher_key, padding, strength)  # type: ignore
 #
 #
-#     class PasswordManager:
-#         """
-#         Uses Scrypt as it's hashing function due to its stronger resistance to GPU and ASIC attacks and to better protect
-#         against evolving attack vectors.
-#         """
-#         def __init__(self, backend: Backend) -> None:
-#             self._crypt: CoreCrypt = CoreCrypt(backend=backend)
-#
-#         def hash_password(self, password: str, kdf: _KeyDerivation = _KeyDerivation.Scrypt, strength: int = _Security.STRONG) -> bytes:
-#             salt = _os.urandom((16, 32, 64, 128)[strength])
-#             return salt + self._crypt.key_derivation(password.encode(), 64, salt=salt, kdf_type=kdf, strength=strength)
-#
-#         def verify_password(self, password: str, hashed_password: bytes, kdf: _KeyDerivation = _KeyDerivation.Scrypt, strength: int = _Security.STRONG) -> bool:
-#             salt_length = (16, 32, 64, 128)[strength]
-#             salt, hashed_password = hashed_password[:salt_length], hashed_password[salt_length:]
-#             derived_key = self._crypt.key_derivation(password.encode(), 64, salt=salt, kdf_type=kdf, strength=strength)
-#             return derived_key == hashed_password
-#
-#
-#     class DataEncryptor:
-#         """
-#         Uses AES X-bit encryption which is very secure if used with a sufficient key size like 256.
-#         """
-#         def __init__(self, password_key_or_key_size: _ty.Literal[128, 192, 256] | bytes | tuple[_ty.Literal[128, 192, 256], str] = 256,
-#                      backend: Backend = Backend.cryptography) -> None:
-#             self._crypt: CoreCrypt = CoreCrypt(backend=backend)
-#             self._key: _BASIC_KEYTYPE = _Sym.Cipher.AES.new_key(password_key_or_key_size)
-#
-#         def get_key(self) -> bytes:
-#             return self._key.get_key()
-#
-#         def encrypt_data(self, data: bytes, padding: _Sym.Padding = _Sym.Padding.PKCS7, mode: _Sym.Operation = _Sym.Operation.CBC) -> bytes:
-#             encrypted_data: bytes = self._crypt.encrypt(data, self._key, padding, mode)
-#             return encrypted_data
-#
-#         def decrypt_data(self, encrypted_data: bytes, padding: _Sym.Padding = _Sym.Padding.PKCS7, mode: _Sym.Operation = _Sym.Operation.CBC) -> bytes:
-#             return self._crypt.decrypt(encrypted_data, self._key, padding, mode)
-#
-#
-#     class DigitalSigner:
-#         """
-#         Uses ECC signatures with the SECP256R1 curve, as it provides strong security against potential future threats
-#         from quantum computers.
-#         """
-#         def __init__(self, private_key: bytes | None = None, backend: Backend = Backend.cryptography) -> None:
-#             self._crypt: CoreCrypt = CoreCrypt(backend=backend)
-#             self._key_pair: _BASIC_KEYPAIRTYPE = _ASym.Cipher.ECC.ecdsa_key(_ASym.Cipher.ECC.Curve.SECP256R1, private_key)
-#
-#         def get_private_key(self) -> bytes:
-#             return self._key_pair.get_private_bytes()
-#
-#         def sign_data(self, data: bytes, padding: _ty.Union[_ASym.Padding, None] = _ASym.Padding.PSS, strength: int = _Security.STRONG) -> bytes:
-#             return self._crypt.sign(data, self._key_pair, padding, strength)
-#
-#         def verify_signature(self, data: bytes, signature: bytes, padding: _ty.Union[_ASym.Padding, None] = _ASym.Padding.PSS, strength: int = _Security.STRONG) -> bool:
-#             return self._crypt.sign_verify(data, signature, self._key_pair, padding, strength)

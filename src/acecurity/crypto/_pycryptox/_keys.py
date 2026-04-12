@@ -144,7 +144,7 @@ def _unpack(payload: bytes) -> dict[str, bytes]:
 
 
 class _SymBase:
-    backend = Backend.pycryptodomex_alpha
+    backend = Backend.pycryptodomex
     __concrete__ = True
 
     _ciphermod: _ty.Any
@@ -410,7 +410,7 @@ class _Salsa20_KEY(_SymBase, _Salsa20_KEYTYPE):
 
 
 class _RSA_KEYPAIR(_RSA_KEYPAIRTYPE):
-    backend = Backend.pycryptodomex_alpha
+    backend = Backend.pycryptodomex
     __concrete__ = True
 
     def __init__(self, key_size: int, pwd: bytes | str | None = None) -> None:
@@ -498,7 +498,7 @@ class _RSA_KEYPAIR(_RSA_KEYPAIRTYPE):
 
 
 class _DSA_KEYPAIR(_DSA_KEYPAIRTYPE):
-    backend = Backend.pycryptodomex_alpha
+    backend = Backend.pycryptodomex
     __concrete__ = True
 
     def __init__(self, key_size: int, pwd: bytes | str | None = None) -> None:
@@ -557,7 +557,7 @@ _CURVE_MAP = {
 
 
 class _ECC_KEYPAIR(_ECC_KEYPAIRTYPE):
-    backend = Backend.pycryptodomex_alpha
+    backend = Backend.pycryptodomex
     __concrete__ = True
 
     def __init__(self, ecc_type: ECCType = ECCType.ECDSA, ecc_curve: ECCCurve | None = ECCCurve.SECP256R1, pwd: bytes | str | None = None) -> None:

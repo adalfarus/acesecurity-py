@@ -504,7 +504,7 @@ class PasswordGenerator:
         :return:
         """
         from pathlib import Path
-        file_path = Path("./dicts/def-dict.txt").absolute()  # TODO: files("aplustools.security.dicts").joinpath("def-dict.txt")
+        file_path = files("acecurity.dicts").joinpath("def-dict.txt")
         with file_path.open("r") as f:
             self._add_unique_words([line.strip() for line in f])
 
@@ -514,7 +514,7 @@ class PasswordGenerator:
         :return:
         """
         from pathlib import Path
-        file_path = Path("./dicts/google-10000-dict.txt").absolute()  # TODO: files("aplustools.security.dicts").joinpath("google-10000-dict.txt")
+        file_path = files("acecurity.dicts").joinpath("google-10000-dict.txt")
         with file_path.open("r") as f:
             self._add_unique_words([line.strip() for line in f])
 
@@ -529,7 +529,7 @@ class PasswordGenerator:
         :return:
         """
         from pathlib import Path
-        file_path = Path(f"./dicts/scowl-{size}-dict.txt").absolute()  # TODO: files("aplustools.security.dicts").joinpath(f"scowl-{size}-dict.txt")
+        file_path = files("acecurity.dicts").joinpath(f"scowl-{size}-dict.txt")
         with file_path.open("r") as f:
             self._add_unique_words([line.strip() for line in f])
 
@@ -539,7 +539,7 @@ class PasswordGenerator:
         :return:
         """
         from pathlib import Path
-        dir_path = Path("./dicts/12-dicts").absolute()  # TODO: files("aplustools.security.dicts").joinpath("12-dicts")
+        dir_path = files("acecurity.dicts").joinpath("12-dicts")
         for file in dir_path.iterdir():
             with file.open("r") as f:
                 self._add_unique_words([line.strip() for line in f])

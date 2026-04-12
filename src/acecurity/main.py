@@ -1,5 +1,35 @@
-from acecurity.tests.test_rand import test_random_generators, test_weighted_functions
 import sys
+from acecurity.crypto import PasswordManager, set_backend, Backend, PQPasswordManager, DataEncryptor, DigitalSigner
+from acecurity import Security
+
+set_backend([Backend.cryptography])
+
+# ret: bytes = PasswordManager.hash_password("Test", strength=Security.SUPER_STRONG)
+# print("RET", ret)
+# print(PasswordManager.verify_password("Test", ret))
+
+# ret: bytes = PQPasswordManager.hash_password("Test", strength=Security.STRONG)
+# set_backend([Backend.argon2_cffi])
+# print(PQPasswordManager.verify_password("Test", ret))
+
+# ec = DataEncryptor.generate()
+# print(ec.get_key())
+# crypt: bytes = ec.encrypt_data(b"Test data")
+# print(crypt)
+# key: bytes = ec.get_key()
+# new_ec = ec.from_key(key)
+# print(new_ec.decrypt_data(crypt))
+
+sign = DigitalSigner.generate()
+print(sign.get_private_key())
+signature: bytes = sign.sign_data(b"My data")
+print("SIG", signature)
+print(sign.verify_signature(b"My data", signature))
+
+sys.exit(0)
+
+from acecurity.tests.test_rand import test_random_generators, test_weighted_functions
+
 
 test_random_generators()
 # test_weighted_functions()
@@ -95,10 +125,10 @@ print("ConcatKDF :", KeyDerivationFunction.ConcatKDF.derive(password, otherinfo=
 
 set_backend(
     [
+        Backend.argon2_cffi,         # Required for Argon2; Argon2 is also supported by cryptography but not 100% so we put quantcrypt first
         Backend.cryptography,
         Backend.pycryptodomex,
         Backend.quantcrypt,          # To enable post-quantum cryptography
-        Backend.argon2_cffi,         # Required for Argon2
         Backend.bcrypt,              # Required for BCrypt
         Backend.std_lib,             # Fallback
     ]

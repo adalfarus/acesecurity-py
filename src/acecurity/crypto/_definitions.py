@@ -41,7 +41,7 @@ class Cipher(metaclass=ABCMeta):
     """Base class for symmetric and asymmetric ciphers."""
 
     # cipher: str
-    # def decode_key(self, key: bytes, encoding: SymKeyEncoding | ASymKeyEncoding): ...
+    # def decode_key(self, key: bytes, encoding: "SymKeyEncoding" | "ASymKeyEncoding"): ...
     # def __str__(self) -> str:
     #     return self.cipher
 
@@ -58,11 +58,11 @@ class SymCipher(Cipher, metaclass=ABCMeta):
     # def new_key(self, __item: _ty.Any) -> "_BaseSymmetricKey":
     #     """Generate or derive a new key from the given input."""
     # @classmethod
-    # def decode_key(cls, key: bytes, encoding: SymKeyEncoding) -> "_BaseSymmetricKey":
+    # def decode_key(cls, key: bytes, encoding: "SymKeyEncoding") -> "_BaseSymmetricKey":
     #     """Decode a symmetric key from its encoded representation."""
     #     if cls.key is None:
     #         raise NotSupportedError(f"The {cls()} cipher is not supported by this backend")
-    #     if not (isinstance(key, bytes) and isinstance(encoding, SymKeyEncoding)):
+    #     if not (isinstance(key, bytes) and isinstance(encoding, "SymKeyEncoding")):
     #         raise ValueError("key needs to be of type bytes and encoding needs to be of type Sym.KeyEncoding")
     #     return cls.key.decode(key, encoding)
 
@@ -79,19 +79,19 @@ class AsymCipher(Cipher, metaclass=ABCMeta):
     # def new_key(self, __item: _ty.Any) -> "_BaseAsymmetricKeypair":
     #     """Generate or derive a new key from the given input."""
     # @classmethod
-    # def decode_private_key(cls, key: bytes, format_: ASymKeyFormat, encoding: ASymKeyEncoding) -> "_BaseAsymmetricKeypair":
+    # def decode_private_key(cls, key: bytes, format_: "ASymKeyFormat", encoding: "ASymKeyEncoding") -> "_BaseAsymmetricKeypair":
     #     """Decode an asymmetric key from its encoded representation."""
     #     if cls.keypair is None:
     #         raise NotSupportedError(f"The {cls()} cipher is not supported by this backend")
-    #     if not (isinstance(key, bytes) and isinstance(format_, ASymKeyFormat) and isinstance(encoding, ASymKeyEncoding)):
+    #     if not (isinstance(key, bytes) and isinstance(format_, "ASymKeyFormat") and isinstance(encoding, "ASymKeyEncoding")):
     #         raise ValueError("key needs to be of type bytes and encoding needs to be of type ASym.KeyEncoding")
     #     return cls.keypair.decode_private_key(key, format_, encoding)
     # @classmethod
-    # def decode_public_key(cls, key: bytes, format_: ASymKeyFormat, encoding: ASymKeyEncoding) -> "_BaseAsymmetricKeypair":
+    # def decode_public_key(cls, key: bytes, format_: "ASymKeyFormat", encoding: "ASymKeyEncoding") -> "_BaseAsymmetricKeypair":
     #     """Decode an asymmetric key from its encoded representation."""
     #     if cls.keypair is None:
     #         raise NotSupportedError(f"The {cls()} cipher is not supported by this backend")
-    #     if not (isinstance(key, bytes) and isinstance(format_, ASymKeyFormat) and isinstance(encoding, ASymKeyEncoding)):
+    #     if not (isinstance(key, bytes) and isinstance(format_, "ASymKeyFormat") and isinstance(encoding, "ASymKeyEncoding")):
     #         raise ValueError("key needs to be of type bytes and encoding needs to be of type ASym.KeyEncoding")
     #     return cls.keypair.decode_public_key(key, format_, encoding)
 
@@ -136,7 +136,7 @@ class SymKeySerializable(SingleSerializable, metaclass=ABCMeta):
 
     @classmethod
     @abstractmethod
-    def decode(cls, key: bytes, encoding: SymKeyEncoding) -> _te.Self:
+    def decode(cls, key: bytes, encoding: "SymKeyEncoding") -> _te.Self:
         """
         Deserialize a key from its encoded byte representation.
         :param key: The encoded key bytes.
@@ -145,7 +145,7 @@ class SymKeySerializable(SingleSerializable, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def encode(self, encoding: SymKeyEncoding) -> bytes:
+    def encode(self, encoding: "SymKeyEncoding") -> bytes:
         """
         Serialize the key into a specific encoding format.
         :param encoding: The format to encode the key into.
@@ -207,8 +207,8 @@ class AsymKeySerializable(DoubleSerializable, metaclass=ABCMeta):
     def decode_private_key(
         cls,
         data: bytes,
-        format_: ASymKeyFormat,
-        encoding: ASymKeyEncoding,
+        format_: "ASymKeyFormat",
+        encoding: "ASymKeyEncoding",
         password: bytes | None = None,
     ) -> _te.Self:
         """
@@ -223,7 +223,7 @@ class AsymKeySerializable(DoubleSerializable, metaclass=ABCMeta):
     @classmethod
     @abstractmethod
     def decode_public_key(
-        cls, data: bytes, format_: ASymKeyFormat, encoding: ASymKeyEncoding
+        cls, data: bytes, format_: "ASymKeyFormat", encoding: "ASymKeyEncoding"
     ) -> _te.Self:
         """
         Deserialize a public key from the given encoded data.
@@ -236,8 +236,8 @@ class AsymKeySerializable(DoubleSerializable, metaclass=ABCMeta):
     @abstractmethod
     def encode_private_key(
         self,
-        format_: ASymKeyFormat,
-        encoding: ASymKeyEncoding,
+        format_: "ASymKeyFormat",
+        encoding: "ASymKeyEncoding",
         password: bytes | None = None,
     ) -> bytes:
         """
@@ -250,7 +250,7 @@ class AsymKeySerializable(DoubleSerializable, metaclass=ABCMeta):
 
     @abstractmethod
     def encode_public_key(
-        self, format_: ASymKeyFormat, encoding: ASymKeyEncoding
+        self, format_: "ASymKeyFormat", encoding: "ASymKeyEncoding"
     ) -> bytes:
         """
         Serialize the public key to the given format and encoding.
@@ -268,8 +268,8 @@ class SymKeyEncryptable(metaclass=ABCMeta):
     def encrypt(
         self,
         plain_bytes: bytes,
-        padding: SymPadding,
-        mode: SymOperation,
+        padding: "SymPadding",
+        mode: "SymOperation",
         /,
         *,
         auto_pack: bool = True,
@@ -287,8 +287,8 @@ class SymKeyEncryptable(metaclass=ABCMeta):
     def decrypt(
         self,
         cipher_bytes_or_dict: bytes | dict[str, bytes],
-        padding: SymPadding,
-        mode: SymOperation,
+        padding: "SymPadding",
+        mode: "SymOperation",
         /,
         *,
         auto_pack: bool = True,
@@ -307,7 +307,7 @@ class SymKeyMACCapable(metaclass=ABCMeta):
     """Interface for MAC generation and verification."""
 
     @abstractmethod
-    def generate_mac(self, data: bytes, auth_type: MessageAuthenticationCode) -> bytes:
+    def generate_mac(self, data: bytes, auth_type: "MessageAuthenticationCode") -> bytes:
         """
         Generate a message authentication code.
 
@@ -318,7 +318,7 @@ class SymKeyMACCapable(metaclass=ABCMeta):
 
     @abstractmethod
     def verify_mac(
-        self, data: bytes, mac: bytes, auth_type: MessageAuthenticationCode
+        self, data: bytes, mac: bytes, auth_type: "MessageAuthenticationCode"
     ) -> bool:
         """
         Verify a message authentication code.
@@ -334,7 +334,7 @@ class AsymKeyEncryptable(metaclass=ABCMeta):
     """Interface for public-key encryption and decryption."""
 
     @abstractmethod
-    def encrypt(self, plain_bytes: bytes, padding: ASymPadding) -> bytes:
+    def encrypt(self, plain_bytes: bytes, padding: "ASymPadding") -> bytes:
         """
         Encrypt data using the public key and specified padding scheme.
         :param plain_bytes: Data to encrypt.
@@ -343,7 +343,7 @@ class AsymKeyEncryptable(metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def decrypt(self, cipher_bytes: bytes, padding: ASymPadding) -> bytes:
+    def decrypt(self, cipher_bytes: bytes, padding: "ASymPadding") -> bytes:
         """
         Decrypt data using the private key and specified padding scheme.
         :param cipher_bytes: Data to decrypt.
@@ -368,7 +368,7 @@ class AsymKeySignable(Signable, metaclass=ABCMeta):
     """Interface for signing and verifying data with asymmetric keys."""
 
     @abstractmethod
-    def sign(self, data: bytes, padding: ASymPadding) -> bytes:
+    def sign(self, data: bytes, padding: "ASymPadding") -> bytes:
         """
         Generate a digital signature for the given data using the private key.
         :param data: Data to sign.
@@ -377,7 +377,7 @@ class AsymKeySignable(Signable, metaclass=ABCMeta):
         """
 
     @abstractmethod
-    def sign_verify(self, data: bytes, signature: bytes, padding: ASymPadding) -> bool:
+    def sign_verify(self, data: bytes, signature: bytes, padding: "ASymPadding") -> bool:
         """
         Verify a digital signature using the public key.
         :param data: Original data that was signed.
@@ -645,11 +645,11 @@ class _HASHER_WITH_LEN_BACKEND(_HASHER_BACKEND):
 
 
 # TODO: REMOVE WHEN THE CIRCULAR IMPORTS ARE FIXED
-# class _hash_algorithm:
-#     class SHA2:
-#         SHA256 = _HASHER_BACKEND("sha256")
-#
-#     MD5 = _HASHER_BACKEND("md5")
+class _hash_algorithm:
+    class SHA2:
+        SHA256 = _HASHER_BACKEND("sha256")
+
+    MD5 = _HASHER_BACKEND("md5")
 
 
 class _BASIC_KEY_DERIVATION_FUNC(metaclass=ABCMeta):

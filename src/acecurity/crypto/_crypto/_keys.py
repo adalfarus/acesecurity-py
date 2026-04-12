@@ -117,7 +117,7 @@ def _encode_bytes(data: bytes, encoding: SymKeyEncoding | ASymKeyEncoding) -> by
 
 
 class _SymmetricKeyBase:
-    backend = Backend.cryptography_alpha
+    backend = Backend.cryptography
     __concrete__ = True
     _ALG_CLS: _ty.Any = None
     _SUPPORTS_GCM: bool = False
@@ -673,7 +673,7 @@ _CURVE_MAP: dict[ECCCurve, _ty.Type[ec.EllipticCurve]] = {
 
 
 class _RSA_KEYPAIR(_RSA_KEYPAIRTYPE):
-    backend = Backend.cryptography_alpha
+    backend = Backend.cryptography
     __concrete__ = True
 
     def __init__(self, key_size: int, pwd: _ty.Optional[bytes | str] = None) -> None:
@@ -763,7 +763,7 @@ class _RSA_KEYPAIR(_RSA_KEYPAIRTYPE):
 
 
 class _DSA_KEYPAIR(_DSA_KEYPAIRTYPE):
-    backend = Backend.cryptography_alpha
+    backend = Backend.cryptography
     __concrete__ = True
 
     def __init__(self, key_size: int, pwd: _ty.Optional[bytes | str] = None) -> None:
@@ -848,7 +848,7 @@ class _DSA_KEYPAIR(_DSA_KEYPAIRTYPE):
 
 
 class _ECC_KEYPAIR(_ECC_KEYPAIRTYPE):
-    backend = Backend.cryptography_alpha
+    backend = Backend.cryptography
     __concrete__ = True
 
     def __init__(

@@ -234,7 +234,8 @@ def derive_scrypt(
         raise ValueError("Salt must be at least 8 bytes for scrypt")
     if not all(isinstance(x, int) and x > 0 for x in (n, r, p, length)):
         raise ValueError("scrypt parameters must be positive integers")
-    return hashlib.scrypt(password, salt=salt, n=n, r=r, p=p, dklen=length)
+    # Enough maxmem to support the highest config of PasswordManager
+    return hashlib.scrypt(password, salt=salt, n=n, r=r, p=p, dklen=length, maxmem=300*1024*1024)
 
 
 def derive_pbkdf2hmac(

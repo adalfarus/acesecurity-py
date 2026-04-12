@@ -4,7 +4,6 @@ acecurity (Ass/Ace) Ace-Security
 
 Sentrifuge
 
-Add configurable key derivation algo to key.new(...)
 
 =>
 Shouldn't we implement AEAD classes and HPKE primitives over the implemented primitives from the chosen backends?
@@ -32,3 +31,17 @@ Add RFC 3394 / RFC 5649 style wrap/unwrap functions as primitives.
 Add HOTP/TOTP as primitives?
 Add Finite-field DH as primitives? => DHParameter, DHPrivateKey
 Implement show_implemented_primitives() -> list[str]? that way it's clear what you can use.
+Implement showing different error if no backend is installed
+
+Add configurable key derivation algo to key.new(...) => Also at api level
+Implement .key(...).encode(...) / .key.decode(...) at api level too;;=> Just call .key(...) on them afterwards
+Implement key derivation at API level.
+Implement autopack at api level not backend level.
+Fix pycrypto and crypto __init__ to import specifically otherwise the keys do not get picked up.
+Look for better? Post quantum impls than quantcrypt, with better day to day usability
+
+CHECK current day => Maybe check if there is a new version and warn to update?; SECURITY WHEN IT GOES THROUGH API!!! => Re-enable security ratings
+
+Refactor the Passkey impl from old+
+
+Pass AEAD through if wanted? => Maybe just keep native and api one separate?
