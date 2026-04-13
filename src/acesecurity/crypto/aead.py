@@ -6,9 +6,9 @@ from enum import Enum
 import hmac
 from typing import Iterable
 
-from acecurity.crypto import BACKENDS, Backend, set_backend
-from acecurity.crypto.algos import Sym
-from acecurity.crypto.exceptions import NotSupportedError
+from . import BACKENDS, Backend, set_backend
+from .algos import Sym
+from .exceptions import NotSupportedError
 
 
 class AEADNotSupportedError(NotSupportedError):
