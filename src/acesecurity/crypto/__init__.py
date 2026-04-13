@@ -26,7 +26,7 @@ from ._definitions import (
 from .algos._sym import (KeyEncoding as SymKeyEncoding, Padding as SymPadding,
                          Operation as SymOperation, MessageAuthenticationCode)
 from .algos._asym import (KeyFormat as ASymKeyFormat, KeyEncoding as ASymKeyEncoding, Padding as ASymPadding, )
-from .. import Security as _Security, RiskLevel as _RiskLevel
+from .._direct import Security as _Security, RiskLevel as _RiskLevel
 from .exceptions import NotSupportedError as _NotSupportedError
 
 # from ...io.env import suppress_warnings as _suppress_warnings
