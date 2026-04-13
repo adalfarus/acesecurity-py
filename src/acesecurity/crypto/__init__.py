@@ -5,6 +5,7 @@ import warnings as _warnings
 import os as _os
 import base64
 
+from . import aead, exceptions, algos
 # from .algos import (Sym as _Sym, ASym as _ASym, HashAlgorithm as _HashAlgorithm,
 #                     KeyDerivationFunction as _KDF)
 from ._definitions import (
