@@ -9,6 +9,7 @@ packages = [
   "acesecurity.crypto._crypto",
   "acesecurity.crypto._pycryptox",
   "acesecurity.crypto._quantcrypt",
+  "acesecurity.crypto.algos",
   "acesecurity.tests",
 ]
 include-package-data = true
