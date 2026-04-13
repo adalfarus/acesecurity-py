@@ -9,13 +9,31 @@ packages = [
   "acesecurity.crypto._crypto",
   "acesecurity.crypto._pycrypto",
   "acesecurity.crypto._quantcrypt",
-  "acesecurity.crypto.algos",
-  "acesecurity.crypto.dicts",
-  "acesecurity.crypto.dicts.12-dicts",
   "acesecurity.tests",
 ]
 include-package-data = true
 package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+"aplustools.security.dicts" = [
+  "def-dict.txt",
+  "google-10000-dict.txt",
+  "scowl-50-dict.txt",
+  "scowl-60-dict.txt",
+  "scowl-70-dict.txt",
+  "scowl-80-dict.txt",
+  "scowl-95-dict.txt",
+  "12-dicts/2of4brif.txt",
+  "12-dicts/2of5core.txt",
+  "12-dicts/2of12.txt",
+  "12-dicts/2of12inf.txt",
+  "12-dicts/3esl.txt",
+  "12-dicts/3of6all.txt",
+  "12-dicts/3of6game.txt",
+  "12-dicts/5d+2a.txt",
+  "12-dicts/6of12.txt",
+  "12-dicts/6phrase.txt"
+]
 
 [tool.ruff]
 line-length = 88  # For PEP8 compliance
