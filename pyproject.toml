@@ -7,7 +7,7 @@ packages = [
   "acesecurity",
   "acesecurity.crypto",
   "acesecurity.crypto._crypto",
-  "acesecurity.crypto._pycrypto",
+  "acesecurity.crypto._pycryptox",
   "acesecurity.crypto._quantcrypt",
   "acesecurity.tests",
 ]
